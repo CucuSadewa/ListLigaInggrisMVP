@@ -50,7 +50,7 @@ public class ItemClickSupport {
 
     public ItemClickSupport(RecyclerView recyclerView) {
         mRecyclerView = recyclerView;
-        mRecyclerView.setTag(R.layout.detail_activity, this);
+        mRecyclerView.setTag(R.id.item_click_support, this);
         mRecyclerView.addOnChildAttachStateChangeListener(mAttachStateChangeListener);
 
     }
@@ -62,7 +62,7 @@ public class ItemClickSupport {
         return support;
     }
     public static ItemClickSupport removeFrom(RecyclerView view){
-        ItemClickSupport support = (ItemClickSupport) view.getTag(R.layout.detail_activity);
+        ItemClickSupport support = (ItemClickSupport) view.getTag(R.id.item_click_support);
         if (support != null){
             support.detach(view);
         }
@@ -77,7 +77,7 @@ public class ItemClickSupport {
 
     private void detach(RecyclerView view) {
         view.removeOnChildAttachStateChangeListener(mAttachStateChangeListener);
-        view.setTag(R.layout.detail_activity, null);
+        view.setTag(R.id.item_click_support, null);
     }
     public interface OnItemClickListener{
         void onItemClick(RecyclerView recyclerView, int position, View view);

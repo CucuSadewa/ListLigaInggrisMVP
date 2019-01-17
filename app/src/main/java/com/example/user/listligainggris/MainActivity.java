@@ -8,7 +8,11 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -33,103 +37,84 @@ import butterknife.ButterKnife;
 
 
 
-public class MainActivity extends AppCompatActivity {
-    ListView listView;
-    private List<ListLigaInggris> listLigaInggrisList;
-
-    /**
-    @BindView(R.id.ListView)
-    RecyclerView recyclerView;
+public class    MainActivity extends AppCompatActivity implements MainView {
+    @BindView(R.id.recyclerView)
+            RecyclerView recyclerView;
+    Presenter presenter;
     ListLigaInggrisAdapter adapter;
+    ApiRepository apiRepository;
 
-    private ArrayList<ListLigaInggris> listLigaInggrisList;
-    String TAG = "TEST"; **/
-
-    private static String URL = "https://www.thesportsdb.com/api/v1/json/1/search_all_teams.php?l=English%20Premier%20League";
-    public final String ARRAY_NAME = "teams";
-    public final String OBJECT_ID_TEAM = "idTeam";
-    public final String OBJECT_NAMA_TEAM = "strTeam";
-    public final String OBJECT_NAMA_PELATIH = "strManager";
-    public final String OBJECT_NAMA_STADION = "strStadium";
-    public final String OBJECT_GAMBAR_STADION = "strStadiumThumb";
-    public final String OBJECT_GAMBAR_TEAM = "strTeamBadge";
-    public final String OBJECT_DESKRIPSI_TEAM = "strDescriptionEN";
-
-
-    @SuppressLint("WringViewCast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        listView =(ListView)findViewById(R.id.ListView);
-        listLigaInggrisList = new ArrayList<>();
-
-        /**
         adapter = new ListLigaInggrisAdapter(this);
+        apiRepository = new ApiRepository();
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-         **/
+        presenter = new Presenter(this,this,apiRepository);
+        presenter.Load("English%20Premier%20League");
 
-        Load();
 
     }
-
-    private void Load() {
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+    @Override
+    public void  showData(final ArrayList<ListLigaInggris> liga){
+        adapter.setListLigaInggrisList(liga);
+        recyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+        ItemClickSupport.addTo(recyclerView).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
             @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject obj = new JSONObject(response);
-                    JSONArray ligaArray = obj.getJSONArray(ARRAY_NAME);
-                    for (int i = 0; i < ligaArray.length(); i++) {
-                        JSONObject ligaObject = ligaArray.getJSONObject(i);
+            public void onItemClick(RecyclerView recyclerView, int position, View view) {
+                Intent intent = new Intent(MainActivity.this,DetaiTeam.class);
+                ListLigaInggris ligaData = new ListLigaInggris(liga.get(position).getIdTeam(),
+                        liga.get(position).getNamaTeam(),
+                        liga.get(position).getNamaPelatih(),
+                        liga.get(position).getNamaStadion(),
+                        liga.get(position).getGambarTeam(),
+                        liga.get(position).getGambarStadion(),
+                        liga.get(position).getLogoTeam(),
+                        liga.get(position).getJerseyTeam(),
+                        liga.get(position).getJulukan(),
+                        liga.get(position).getAsalLiga(),
+                        liga.get(position).getDeskripsiTeam(),
+                        liga.get(position).getDeskripsiStadion(),
+                        liga.get(position).getKapsitasStadion(),
+                        liga.get(position).getIntFormedYear(),
+                        liga.get(position).getFbTeam(),
+                        liga.get(position).getTwTeam(),
+                        liga.get(position).getIgTeam(),
+                        liga.get(position).getWebTeam(),
+                        liga.get(position).getYoutubeTeam(),
+                        liga.get(position).getLokasiStadion(),
+                        liga.get(position).getNegara()
+                        );
 
-                        ListLigaInggris listLigaInggris = new ListLigaInggris(ligaObject.getString(OBJECT_ID_TEAM),
-                                ligaObject.getString(OBJECT_NAMA_TEAM),
-                                ligaObject.getString(OBJECT_GAMBAR_TEAM),
-                                ligaObject.getString(OBJECT_NAMA_PELATIH),
-                                ligaObject.getString(OBJECT_NAMA_STADION),
-                                ligaObject.getString(OBJECT_DESKRIPSI_TEAM),
-                                ligaObject.getString(OBJECT_GAMBAR_STADION));
-                        Log.d("text", "onResponse : " + listLigaInggris.getIdTeam());
-                        listLigaInggrisList.add(listLigaInggris);
-                    }
-                    ListLigaInggrisAdapter adapter = new ListLigaInggrisAdapter(listLigaInggrisList, getApplicationContext());
-                    listView.setAdapter(adapter);
-
-                    /**
-                    adapter.setListLigaInggrise(listLigaInggrisList);
-                    adapter.notifyDataSetChanged();
-                    recyclerView.setAdapter(adapter);
-                    ItemClickSupport.addTo(recyclerView).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(RecyclerView recyclerView, int position, View view) {
-                            showClick(listLigaInggrisList.get(position));
-                        }
-
-                    }); **/
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                intent.putExtra("teams",ligaData);
+                startActivity(intent);
 
             }
         });
-        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
-        requestQueue.add(stringRequest);
+
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.liga_inggris:
+                presenter.Load("English%20Premier%20League");
+                break;
+            case R.id.liga_spain:
+                presenter.Load("Spanish%20La%20Liga");
+                break;
+        }
+        return true;
 
     }
 
-    /**
-        public void showClick (ListLigaInggris item){
-            Toast.makeText(this, "Anda mengclik" + item.getStrTeamBadge(), Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(this, DetaiTeam.class);
-            intent.putExtra("team", item);
-            startActivity(intent);
-        } **/
+
     }
